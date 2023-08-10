@@ -4,6 +4,7 @@ import re
 import argparse
 import sys
 
+
 model_download_link = {
     'yolov8n': 'https://github.com/ultralytics/assets/releases/download/v0.0.0/yolov8n.pt',
     'yolov8s': 'https://github.com/ultralytics/assets/releases/download/v0.0.0/yolov8s.pt',
@@ -152,43 +153,54 @@ def prepare_running_env(cfg):
 
     if install_flag:
         print('Installing dependency packages for torch...')
-        if not os.path.exists('./cache'):
-            os.makedirs('./cache')
+        script_cache_path = os.path.join(sys.path[0], 'cache')
+        if not os.path.exists(script_cache_path):
+            os.makedirs(script_cache_path)
         run_cmd('sudo -S apt-get update', cfg.password, _stderr=subprocess.STDOUT)
         run_cmd('sudo apt-get install -y libopenblas-base libopenmpi-dev libjpeg-dev zlib1g-dev', cfg.password)
         print('Done!')
         if jetpack_version in ['R35.2.1', 'R35.3.1']:
-            if not os.path.exists('./cache/torch-2.0.0+nv23.05-cp38-cp38-linux_aarch64.whl'):
+            torch_package_path = os.path.join(script_cache_path, 'torch-2.0.0+nv23.05-cp38-cp38-linux_aarch64.whl')
+            if not os.path.exists(torch_package_path):
                 print('Downloading torch package...')
-                run_cmd('wget https://nvidia.box.com/shared/static/i8pukc49h3lhak4kkn67tg9j4goqm0m7.whl'
-                        ' -O ./cache/torch-2.0.0+nv23.05-cp38-cp38-linux_aarch64.whl')
+                run_cmd(f'wget https://nvidia.box.com/shared/static/i8pukc49h3lhak4kkn67tg9j4goqm0m7.whl'
+                        f' -O {torch_package_path}')
             print('Installing torch...')
-            run_cmd('pip3 install ./cache/torch-2.0.0+nv23.05-cp38-cp38-linux_aarch64.whl', _stderr=subprocess.STDOUT)
+            run_cmd(f'pip3 install {torch_package_path}', _stderr=subprocess.STDOUT)
 
-            if not os.path.exists('./cache/torchvision'):
+            torchvision_package_path = os.path.join(script_cache_path, 'torchvision')
+            if not os.path.exists(torchvision_package_path):
                 print('Downloading torchvision...')
-                run_cmd('git clone https://github.com/pytorch/vision ./cache/torchvision')
+                run_cmd(f'git clone https://github.com/pytorch/vision {torchvision_package_path}')
             print('Installing torchvision...(about 10 minutes to wait)')
             run_cmd(
-                'cd ./cache/torchvision ; git checkout v0.15.2 ; python3 setup.py install --user ; cd ../..',
+                f'cd {torchvision_package_path} ; '
+                f'git checkout v0.15.2 ; '
+                f'python3 setup.py install --user ; '
+                f'cd {os.getcwd()}',
                 _stderr=subprocess.STDOUT)
 
         # elif jetpack_version in ['R34.1', 'R35.1', 'R35.2.1', 'R35.3.1']:
         else:
-            if not os.path.exists('./cache/torch-1.13.0+nv22.10-cp38-cp38-linux_aarch64.whl'):
+            torch_package_path = os.path.join(script_cache_path, 'torch-1.13.0+nv22.10-cp38-cp38-linux_aarch64.whl')
+            if not os.path.exists(torch_package_path):
                 print('Downloading torch package...')
-                run_cmd('wget https://developer.download.nvidia.com/compute/redist/jp/v502/pytorch/torch-1.13.0a0'
-                        '+d0d6b1f2.nv22.10-cp38-cp38-linux_aarch64.whl'
-                        ' -O ./cache/torch-1.13.0+nv22.10-cp38-cp38-linux_aarch64.whl')
+                run_cmd(f'wget https://developer.download.nvidia.com/compute/redist/jp/v502/pytorch/torch-1.13.0a0'
+                        f'+d0d6b1f2.nv22.10-cp38-cp38-linux_aarch64.whl'
+                        f' -O {torch_package_path}')
             print('Installing torch...')
-            run_cmd('pip3 install ./cache/torch-1.13.0+nv22.10-cp38-cp38-linux_aarch64.whl')
+            run_cmd(f'pip3 install {torch_package_path}', _stderr=subprocess.STDOUT)
 
-            if not os.path.exists('./cache/torchvision'):
+            torchvision_package_path = os.path.join(script_cache_path, 'torchvision')
+            if not os.path.exists(torchvision_package_path):
                 print('Downloading torchvision...')
-                run_cmd('git clone https://github.com/pytorch/vision ./cache/torchvision')
+                run_cmd(f'git clone https://github.com/pytorch/vision {torchvision_package_path}')
             print('Installing torchvision...(about 10 minutes to wait)')
             run_cmd(
-                'cd ./cache/torchvision ; git checkout v0.14.1 ; python3 setup.py install --user ; cd ../..',
+                f'cd {torchvision_package_path} ; '
+                f'git checkout v0.14.1 ; '
+                f'python3 setup.py install --user ; '
+                f'cd {os.getcwd()}',
                 _stderr=subprocess.STDOUT)
 
         print('Reinstall of torch torchvision completed!')
@@ -205,7 +217,7 @@ if __name__ == '__main__':
     check_args(args)
     prepare_running_env(args)
 
-    model_path = os.path.join('./weights', args.task)
+    model_path = os.path.join(sys.path[0], 'weights', args.task)
     if not os.path.exists(model_path):
         os.makedirs(model_path)
     model_path = os.path.join(model_path, args.model + '.pt')
@@ -218,8 +230,9 @@ if __name__ == '__main__':
         cmd_str = f"yolo export model={model_path} format=engine device=0"
         if args.use_half:
             cmd_str += ' half=True'
-        # run_cmd(cmd)
-        run_cmd_with_popen(cmd_str)
+        run_cmd(cmd_str, _stderr=subprocess.STDOUT)
+        print('This process may take up to 20 minutes, please be patient and wait...')
+        # run_cmd_with_popen(cmd_str)
         model_path = os.path.splitext(model_path)[0] + '.engine'
 
     run_cmd(f"yolo {args.task} predict model='{model_path}' source='{args.source}' show=True save=False")
