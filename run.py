@@ -226,13 +226,14 @@ if __name__ == '__main__':
         run_cmd(f"wget {model_download_link[args.model]} -O {model_path}")
 
     if args.use_trt:
-        print('Export model to tensorRT...')
-        cmd_str = f"yolo export model={model_path} format=engine device=0"
-        if args.use_half:
-            cmd_str += ' half=True'
-        run_cmd(cmd_str, _stderr=subprocess.STDOUT)
-        print('This process may take up to 20 minutes, please be patient and wait...')
-        # run_cmd_with_popen(cmd_str)
+        if not os.path.exists(os.path.splitext(model_path)[0] + '.engine'):
+            print('Export model to tensorRT...')
+            cmd_str = f"yolo export model={model_path} format=engine device=0"
+            if args.use_half:
+                cmd_str += ' half=True'
+            run_cmd(cmd_str, _stderr=subprocess.STDOUT)
+            print('This process may take up to 20 minutes, please be patient and wait...')
+            # run_cmd_with_popen(cmd_str)
         model_path = os.path.splitext(model_path)[0] + '.engine'
 
     run_cmd(f"yolo {args.task} predict model='{model_path}' source='{args.source}' show=True save=False")
