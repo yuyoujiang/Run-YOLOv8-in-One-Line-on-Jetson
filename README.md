@@ -27,3 +27,19 @@ python <path to this script>/run.py -h
 - --use_trt : Use tensorTR for inference. If can't find a tensorRT model, create one.
 - --use_half : FP16 quantization when export a tensorRT model.
 - --source : path to input video or camera id. Default to 0(camera id). Refer to [here](https://docs.ultralytics.com/modes/).
+
+## Another Option
+
+In fact, the most troublesome process is the configuration process of the running environment. Therefore, the repository provides a one-line option to configure the running environment.
+
+```sh
+git clone https://github.com/yuyoujiang/Run-YOLOv8-in-One-Line-on-Jetson && python Run-YOLOv8-in-One-Line-on-Jetson/setup_env.py <password>
+```
+
+And then, you can run yolov8 follow this [link](https://wiki.seeedstudio.com/YOLOv8-TRT-Jetson/).
+
+## References
+
+[https://github.com/ultralytics/](https://github.com/ultralytics/)  
+[https://wiki.seeedstudio.com](https://wiki.seeedstudio.com/YOLOv8-DeepStream-TRT-Jetson/)  
+[https://wiki.seeedstudio.com/YOLOv8-TRT-Jetson/](https://wiki.seeedstudio.com/YOLOv8-TRT-Jetson/)
