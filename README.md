@@ -26,4 +26,4 @@ python <path to this script>/run.py -h
 - --model : The model name. You can find the name of the model you want to use [here](https://docs.ultralytics.com/models/yolov8/#supported-modes). Default to yolov8n.
 - --use_trt : Use tensorTR for inference. If can't find a tensorRT model, create one.
 - --use_half : FP16 quantization when export a tensorRT model.
-- --source : path to input video or camera id. Refer to [here](https://docs.ultralytics.com/modes/)
+- --source : path to input video or camera id. Default to 0(camera id). Refer to [here](https://docs.ultralytics.com/modes/).
