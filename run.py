@@ -116,11 +116,17 @@ def prepare_running_env(cfg):
             f.write('# For run yolov8 in one line\n')
             f.write('export PATH=~/.local/bin:$PATH\n')
 
+    # Check python version
+    check_python = run_cmd('python3 --version')
+    if '3.8' not in check_python.stdout.decode('gbk'):
+        print('Please update the python version to 3.8')
+        sys.exit(0)
+    
     print('Step 2. Install Ultralytics package')
     check_ultralytics = run_cmd('pip3 list | grep -w ultralytics')
     if check_ultralytics.stdout.decode('gbk') == '':
         print('Installing Ultralytics...')
-        run_cmd('pip3 install ultralytics', _stderr=subprocess.STDOUT)
+        run_cmd('pip3 install ultralytics==8.0.150', _stderr=subprocess.STDOUT)
     else:
         print('Ultralytics has been installed')
 
@@ -179,9 +185,7 @@ def prepare_running_env(cfg):
                 f'python3 setup.py install --user ; '
                 f'cd {os.getcwd()}',
                 _stderr=subprocess.STDOUT)
-
-        # elif jetpack_version in ['R34.1', 'R35.1', 'R35.2.1', 'R35.3.1']:
-        else:
+        elif jetpack_version in ['R34.1', 'R35.1', 'R35.2.1', 'R35.3.1']:
             torch_package_path = os.path.join(script_cache_path, 'torch-1.13.0+nv22.10-cp38-cp38-linux_aarch64.whl')
             if not os.path.exists(torch_package_path):
                 print('Downloading torch package...')
@@ -202,6 +206,9 @@ def prepare_running_env(cfg):
                 f'python3 setup.py install --user ; '
                 f'cd {os.getcwd()}',
                 _stderr=subprocess.STDOUT)
+        else:
+            print('Only support JetPack5.0+, please update your operating system')
+            sys.exit(0)
 
         print('Reinstall of torch torchvision completed!')
 
@@ -231,8 +238,8 @@ if __name__ == '__main__':
             cmd_str = f"yolo export model={model_path} format=engine device=0"
             if args.use_half:
                 cmd_str += ' half=True'
-            run_cmd(cmd_str, _stderr=subprocess.STDOUT)
             print('This process may take up to 20 minutes, please be patient and wait...')
+            run_cmd(cmd_str, _stderr=subprocess.STDOUT)
             # run_cmd_with_popen(cmd_str)
         model_path = os.path.splitext(model_path)[0] + '.engine'
 
