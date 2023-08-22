@@ -99,7 +99,8 @@ def prepare_running_env(cfg):
     # Install Ultralytics Package
     print('Step 1. Access the terminal of Jetson device, install pip and upgrade it')
     print('Upgrade pip...')
-    os.environ['PATH'] += os.pathsep + '~/.local/bin'
+    user_name = run_cmd('echo $USER')
+    os.environ['PATH'] += os.pathsep + os.path.join('/home', user_name.stdout.decode('gbk').strip(), '.local/bin')
     run_cmd('sudo -S apt-get update', cfg.password)
     run_cmd('sudo -S apt-get install -y python3-pip', cfg.password)
     run_cmd('pip3 install --upgrade pip')
