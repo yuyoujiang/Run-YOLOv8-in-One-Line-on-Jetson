@@ -99,23 +99,24 @@ def prepare_running_env(cfg):
     # Install Ultralytics Package
     print('Step 1. Access the terminal of Jetson device, install pip and upgrade it')
     print('Upgrade pip...')
+    os.environ['PATH'] += os.pathsep + '~/.local/bin'
     run_cmd('sudo -S apt-get update', cfg.password)
     run_cmd('sudo -S apt-get install -y python3-pip', cfg.password)
     run_cmd('pip3 install --upgrade pip')
 
-    user_name = run_cmd('echo $USER')
-    file_path = os.path.join('/home', user_name.stdout.decode('gbk').strip(), '.bashrc')
-    add_path_flag = False
-    with open(file_path, 'r') as f:
-        lines = f.readlines()
-        if 'export PATH=~/.local/bin:$PATH\n' not in lines:
-            add_path_flag = True
-    if add_path_flag:
-        with open(file_path, 'a') as f:
-            f.write('\n')
-            f.write('# For run yolov8 in one line\n')
-            f.write('export PATH=~/.local/bin:$PATH\n')
-        run_cmd('sudo -S source ~/.bashrc', cfg.password)
+    # user_name = run_cmd('echo $USER')
+    # file_path = os.path.join('/home', user_name.stdout.decode('gbk').strip(), '.bashrc')
+    # add_path_flag = False
+    # with open(file_path, 'r') as f:
+    #     lines = f.readlines()
+    #     if 'export PATH=~/.local/bin:$PATH\n' not in lines:
+    #         add_path_flag = True
+    # if add_path_flag:
+    #     with open(file_path, 'a') as f:
+    #         f.write('\n')
+    #         f.write('# For run yolov8 in one line\n')
+    #         f.write('export PATH=~/.local/bin:$PATH\n')
+    #     run_cmd('sudo -S source ~/.bashrc', cfg.password)
 
     # Check python version
     check_python = run_cmd('python3 --version')
