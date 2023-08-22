@@ -115,13 +115,22 @@ def prepare_running_env(cfg):
             f.write('\n')
             f.write('# For run yolov8 in one line\n')
             f.write('export PATH=~/.local/bin:$PATH\n')
+    run_cmd('source ~/.bashrc')
 
     # Check python version
     check_python = run_cmd('python3 --version')
     if '3.8' not in check_python.stdout.decode('gbk'):
         print('Please update the python version to 3.8')
         sys.exit(0)
-    
+
+    # Check nvidia-jetpack version
+    check_jetpack = run_cmd('sudo -S dpkg -l | grep -w jetpack', cfg.password)
+    if 'nvidia-jetpack' not in check_jetpack.stdout:
+        print('Installing nvidia-jetpack...(about 5 minutes to wait)')
+        run_cmd('sudo -S apt install nvidia-jetpack -y', cfg.password)
+    else:
+        print('nvidia-jetpack is already installed!')
+
     print('Step 2. Install Ultralytics package')
     check_ultralytics = run_cmd('pip3 list | grep -w ultralytics')
     if check_ultralytics.stdout.decode('gbk') == '':
