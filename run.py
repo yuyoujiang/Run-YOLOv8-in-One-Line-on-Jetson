@@ -115,7 +115,7 @@ def prepare_running_env(cfg):
             f.write('\n')
             f.write('# For run yolov8 in one line\n')
             f.write('export PATH=~/.local/bin:$PATH\n')
-    run_cmd('source ~/.bashrc')
+        run_cmd('sudo -S source ~/.bashrc', cfg.password)
 
     # Check python version
     check_python = run_cmd('python3 --version')
@@ -194,7 +194,8 @@ def prepare_running_env(cfg):
                 f'python3 setup.py install --user ; '
                 f'cd {os.getcwd()}',
                 _stderr=subprocess.STDOUT)
-        elif jetpack_version in ['R34.1', 'R35.1', 'R35.2.1', 'R35.3.1']:
+        # elif jetpack_version in ['R34.1', 'R35.1', 'R35.2.1', 'R35.3.1']:
+        else:
             torch_package_path = os.path.join(script_cache_path, 'torch-1.13.0+nv22.10-cp38-cp38-linux_aarch64.whl')
             if not os.path.exists(torch_package_path):
                 print('Downloading torch package...')
@@ -215,9 +216,6 @@ def prepare_running_env(cfg):
                 f'python3 setup.py install --user ; '
                 f'cd {os.getcwd()}',
                 _stderr=subprocess.STDOUT)
-        else:
-            print('Only support JetPack5.0+, please update your operating system')
-            sys.exit(0)
 
         print('Reinstall of torch torchvision completed!')
 
