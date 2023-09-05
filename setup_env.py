@@ -35,7 +35,7 @@ def prepare_running_env():
 
     # Check nvidia-jetpack version
     check_jetpack = run_cmd('sudo dpkg -l | grep -w jetpack')
-    if 'nvidia-jetpack' not in check_jetpack.stdout:
+    if 'nvidia-jetpack' not in check_jetpack.stdout.decode('gbk'):
         print('Installing nvidia-jetpack...(about 5 minutes to wait)')
         run_cmd('sudo apt install nvidia-jetpack -y')
     else:
