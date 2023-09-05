@@ -33,7 +33,7 @@ python <path to this script>/run.py -h
 In fact, the most troublesome process is the configuration process of the running environment. Therefore, the repository provides a one-line option to configure the running environment.
 
 ```sh
-git clone https://github.com/yuyoujiang/Run-YOLOv8-in-One-Line-on-Jetson && python Run-YOLOv8-in-One-Line-on-Jetson/setup_env.py <password>
+git clone https://github.com/yuyoujiang/Run-YOLOv8-in-One-Line-on-Jetson && python Run-YOLOv8-in-One-Line-on-Jetson/setup_env.py
 ```
 
 And then, you can run yolov8 follow this [link](https://wiki.seeedstudio.com/YOLOv8-TRT-Jetson/).
