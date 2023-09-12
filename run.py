@@ -45,21 +45,8 @@ def run_cmd(cmd, _password=None, _stderr=None):
     return rst
 
 
-def run_cmd_with_popen(cmd):
-    p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    while p.poll() is None:
-        try:
-            line = p.stdout.readline().decode('gbk')
-        except:
-            continue
-        line = line.strip()
-        if line and 'error' not in line:
-            print('Popen output: [{}]'.format(line))
-
-
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('password', type=str, help='administrator password')
     parser.add_argument(
         '--task', default='detect', type=str,
         help='supported "detect", "classify", "segment" and "pose". '
@@ -69,10 +56,10 @@ def parse_args():
         '--model', default='yolov8n', type=str,
         help='model name. Refer to https://docs.ultralytics.com/models/yolov8/#supported-modes'
     )
-    parser.add_argument('--use_trt', default=True, type=bool, help='export engine model')
-    parser.add_argument('--use_half', default=True, type=bool, help='FP16 quantization')
+    parser.add_argument('--use_trt', default=False, type=bool, help='export engine model')
+    parser.add_argument('--use_half', default=False, type=bool, help='FP16 quantization')
     parser.add_argument(
-        '--source', default="0", type=str,
+        '--source', default="https://files.seeedstudio.com/products/NVIDIA-Jetson/people.mp4", type=str,
         help='path to input video or camera id. Refer to https://docs.ultralytics.com/modes/'
              'predict/#inference-sources for more detailed information.'
     )
@@ -101,35 +88,21 @@ def prepare_running_env(cfg):
     print('Upgrade pip...')
     user_name = run_cmd('echo $USER')
     os.environ['PATH'] += os.pathsep + os.path.join('/home', user_name.stdout.decode('gbk').strip(), '.local/bin')
-    run_cmd('sudo -S apt-get update', cfg.password)
-    run_cmd('sudo -S apt-get install -y python3-pip', cfg.password)
+    run_cmd('sudo apt-get update')
+    run_cmd('sudo apt-get install -y python3-pip')
     run_cmd('pip3 install --upgrade pip')
 
-    # user_name = run_cmd('echo $USER')
-    # file_path = os.path.join('/home', user_name.stdout.decode('gbk').strip(), '.bashrc')
-    # add_path_flag = False
-    # with open(file_path, 'r') as f:
-    #     lines = f.readlines()
-    #     if 'export PATH=~/.local/bin:$PATH\n' not in lines:
-    #         add_path_flag = True
-    # if add_path_flag:
-    #     with open(file_path, 'a') as f:
-    #         f.write('\n')
-    #         f.write('# For run yolov8 in one line\n')
-    #         f.write('export PATH=~/.local/bin:$PATH\n')
-    #     run_cmd('sudo -S source ~/.bashrc', cfg.password)
-
-    # Check python version
-    check_python = run_cmd('python3 --version')
-    if '3.8' not in check_python.stdout.decode('gbk'):
-        print('Please update the python version to 3.8')
-        sys.exit(0)
+    # # Check python version
+    # check_python = run_cmd('python3 --version')
+    # if '3.8' not in check_python.stdout.decode('gbk'):
+    #     print('Please update the python version to 3.8')
+    #     sys.exit(0)
 
     # Check nvidia-jetpack version
-    check_jetpack = run_cmd('sudo -S dpkg -l | grep -w jetpack', cfg.password)
-    if 'nvidia-jetpack' not in check_jetpack.stdout:
+    check_jetpack = run_cmd('sudo dpkg -l | grep -w jetpack')
+    if 'nvidia-jetpack' not in check_jetpack.stdout.decode('gbk'):
         print('Installing nvidia-jetpack...(about 5 minutes to wait)')
-        run_cmd('sudo -S apt install nvidia-jetpack -y', cfg.password)
+        run_cmd('sudo apt install nvidia-jetpack -y')
     else:
         print('nvidia-jetpack is already installed!')
 
@@ -157,24 +130,42 @@ def prepare_running_env(cfg):
     check_torch = run_cmd('pip3 list | grep -w torch')
     if not check_torch.returncode:
         pattern = r'\d+\.(?:\d+\.)*\d+'
-        torch_vision = re.findall(pattern, check_torch.stdout.decode('gbk'))
-        if len(torch_vision) == 2:
-            if torch_vision[0] in ['2.0.0'] and torch_vision[1] in ['23.5']:
+        torch_version = re.findall(pattern, check_torch.stdout.decode('gbk'))
+        if len(torch_version) == 2:
+            if torch_version[0] in ['2.0.0'] and torch_version[1] in ['23.5']:
                 print('The torch version is legal')
                 install_flag = False
         else:
             print('Uninstalling torch and torchvision...')
-            _ = run_cmd('pip3 uninstall torch torchvision -y')
+            run_cmd('pip3 uninstall torch torchvision -y')
     else:
         print('No torch installed through pip3')
+        run_cmd('pip3 uninstall torch torchvision -y')
+
+    if not install_flag:
+        print('Check torchvision ...')
+        check_torchvision = run_cmd('pip3 list | grep -w torchvision')
+        if not check_torchvision.returncode:
+            pattern = r'\d+\.(?:\d+\.)*\d+'
+            check_torchvision = re.findall(pattern, check_torchvision.stdout.decode('gbk'))
+            if len(check_torchvision) == 1 and check_torchvision[0] in ['0.15.2']:
+                print('The torchvision version is legal')
+            else:
+                print('The torchvision is illegal reinstall torch and torchvision...')
+                install_flag = True
+                run_cmd('pip3 uninstall torch torchvision -y')
+        else:
+            print('No torchvision installed through pip3')
+            install_flag = True
+            run_cmd('pip3 uninstall torch torchvision -y')
 
     if install_flag:
         print('Installing dependency packages for torch...')
         script_cache_path = os.path.join(sys.path[0], 'cache')
         if not os.path.exists(script_cache_path):
             os.makedirs(script_cache_path)
-        run_cmd('sudo -S apt-get update', cfg.password, _stderr=subprocess.STDOUT)
-        run_cmd('sudo apt-get install -y libopenblas-base libopenmpi-dev libjpeg-dev zlib1g-dev', cfg.password)
+        run_cmd('sudo apt-get update', _stderr=subprocess.STDOUT)
+        run_cmd('sudo apt-get install -y libopenblas-base libopenmpi-dev libjpeg-dev zlib1g-dev')
         print('Done!')
         if jetpack_version in ['R35.2.1', 'R35.3.1']:
             torch_package_path = os.path.join(script_cache_path, 'torch-2.0.0+nv23.05-cp38-cp38-linux_aarch64.whl')
@@ -229,6 +220,13 @@ def prepare_running_env(cfg):
 
 
 if __name__ == '__main__':
+    # check python version first
+    check_python = subprocess.Popen('python --version', shell=True, stdout=subprocess.PIPE)
+    if '3.8' not in check_python.communicate()[0].decode('gbk'):
+        print(f"Sorry, your Python version is {check_python.communicate()[0].decode('gbk')}."
+              f" But the script needs python3.8. Therefore run the script again as follows `python3 YOLOv8-Jetson.py`")
+        sys.exit(0)
+
     args = parse_args()
     check_args(args)
     prepare_running_env(args)
