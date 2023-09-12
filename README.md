@@ -9,7 +9,7 @@ Before deploying YOLOv8, please ensure that you have a [hardware device](https:/
 The only command you need to execute is:
 
 ```sh
-git clone https://github.com/yuyoujiang/Run-YOLOv8-in-One-Line-on-Jetson && python Run-YOLOv8-in-One-Line-on-Jetson/run.py <password>
+git clone https://github.com/yuyoujiang/Run-YOLOv8-in-One-Line-on-Jetson && python Run-YOLOv8-in-One-Line-on-Jetson/run.py
 ```
 
 ## Arguments Introduction
@@ -21,7 +21,6 @@ Please view the details using the following command:
 python <path to this script>/run.py -h
 ```
 
-- --password  : This is a positional arguments. A password may be required to install the necessary dependencies.
 - --task : The CV task what you want to test. Supported "detect", "classify", "segment" and "pose". Default to detect. Refer to [here](https://docs.ultralytics.com/tasks/) for more information.
 - --model : The model name. You can find the name of the model you want to use [here](https://docs.ultralytics.com/models/yolov8/#supported-modes). Default to yolov8n.
 - --use_trt : Use tensorTR for inference. If can't find a tensorRT model, create one.
